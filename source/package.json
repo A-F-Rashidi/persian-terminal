@@ -1,0 +1,197 @@
+{
+  "name": "persian-terminal",
+  "displayName": "Persian Terminal",
+  "description": "Read Persian naturally in VS Code: RTL output, interactive terminal sessions, Python execution, search and export.",
+  "version": "0.3.5",
+  "publisher": "persian-terminal-lab",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "persian",
+    "farsi",
+    "rtl",
+    "terminal",
+    "bidi"
+  ],
+  "main": "./out/extension.js",
+  "extensionKind": [
+    "workspace"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false,
+      "description": "This extension executes shell commands in your workspace."
+    },
+    "virtualWorkspaces": {
+      "supported": false,
+      "description": "A local or remote Node.js extension host with a real filesystem is required."
+    }
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "persianTerminal.open",
+        "title": "Persian Terminal: Open",
+        "icon": "$(terminal)"
+      },
+      {
+        "command": "persianTerminal.runPythonFile",
+        "title": "Run Python File in Persian Terminal",
+        "icon": "$(terminal)",
+        "enablement": "isWorkspaceTrusted"
+      }
+    ],
+    "viewsContainers": {
+      "panel": [
+        {
+          "id": "persianTerminal",
+          "title": "Persian Terminal",
+          "icon": "media/terminal.svg"
+        }
+      ]
+    },
+    "views": {
+      "persianTerminal": [
+        {
+          "type": "webview",
+          "id": "persianTerminal.output",
+          "name": "Persian Terminal"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Persian Terminal",
+      "properties": {
+        "persianTerminal.shell": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "powershell",
+            "pwsh",
+            "bash",
+            "sh",
+            "zsh"
+          ],
+          "default": "auto",
+          "scope": "machine",
+          "description": "Initial shell for new sessions. Availability is probed before execution; the panel selector lists runnable shells."
+        },
+        "persianTerminal.shellPath": {
+          "type": "string",
+          "default": "",
+          "scope": "machine",
+          "description": "Optional executable path for the selected shell. Choose an explicit shell type when overriding."
+        },
+        "persianTerminal.fontFamily": {
+          "type": "string",
+          "default": "Consolas, 'Cascadia Mono', 'DejaVu Sans Mono', monospace",
+          "description": "Output font stack. Vazirmatn is bundled; other fonts must be locally installed."
+        },
+        "persianTerminal.fontSize": {
+          "type": "number",
+          "default": 14,
+          "minimum": 10,
+          "maximum": 32,
+          "description": "Text size in the Persian output panel, from 10 to 32 pixels."
+        },
+        "persianTerminal.maxLines": {
+          "type": "integer",
+          "default": 2000,
+          "minimum": 100,
+          "maximum": 10000,
+          "description": "Maximum rendered output lines."
+        },
+        "persianTerminal.pythonPath": {
+          "type": "string",
+          "default": "",
+          "scope": "machine-overridable",
+          "description": "Optional Python executable path (no arguments). Empty uses the selected Python extension interpreter, then .venv, then Python on PATH."
+        },
+        "persianTerminal.persianFontFamily": {
+          "type": "string",
+          "default": "Vazirmatn, 'Segoe UI', Tahoma, sans-serif",
+          "description": "Font for Persian output and interface. Vazirmatn is bundled and works offline; custom fonts must be installed locally."
+        },
+        "persianTerminal.density": {
+          "type": "string",
+          "enum": [
+            "compact",
+            "comfortable"
+          ],
+          "default": "compact",
+          "description": "Spacing in the output panel."
+        },
+        "persianTerminal.persianAlignment": {
+          "type": "string",
+          "enum": [
+            "right",
+            "left",
+            "auto"
+          ],
+          "default": "right",
+          "description": "Persian output alignment. Copy always preserves logical text order."
+        },
+        "persianTerminal.sessionBackend": {
+          "type": "string",
+          "enum": [
+            "native",
+            "legacy"
+          ],
+          "default": "native",
+          "description": "Native uses VS Code PTY/ConPTY and requires shell integration (PowerShell 7, Bash or Zsh). Legacy retains the previous pipe-based runner. Changes apply to newly opened tabs."
+        }
+      }
+    },
+    "menus": {
+      "editor/title/run": [
+        {
+          "command": "persianTerminal.runPythonFile",
+          "when": "resourceLangId == python",
+          "group": "navigation@5"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "persianTerminal.runPythonFile",
+          "when": "editorLangId == python",
+          "group": "1_modification@5"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "persianTerminal.runPythonFile",
+          "when": "resourceExtname == .py",
+          "group": "navigation@5"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p .",
+    "watch": "tsc -watch -p .",
+    "test": "npm run compile && node --test test/*.test.cjs",
+    "vscode:prepublish": "npm run compile",
+    "package": "vsce package --no-dependencies --allow-missing-repository"
+  },
+  "devDependencies": {
+    "@types/node": "22.18.6",
+    "@types/vscode": "1.95.0",
+    "@vscode/vsce": "3.6.2",
+    "jsdom": "27.0.1",
+    "typescript": "5.9.3"
+  },
+  "icon": "media/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/A-F-Rashidi/persian-terminal.git"
+  },
+  "homepage": "https://github.com/A-F-Rashidi/persian-terminal#readme",
+  "bugs": {
+    "url": "https://github.com/A-F-Rashidi/persian-terminal/issues"
+  }
+}
