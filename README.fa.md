@@ -40,7 +40,7 @@
 <div dir="ltr" align="left">
 
 ```sh
-python -c "print('Hello from Persian Terminal!')"
+python -c "print('سلام دنیا از طریق ترمینال فارسی')"
 ```
 
 </div>
