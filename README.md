@@ -163,7 +163,7 @@ Licensed under MIT.
 <div dir="ltr" align="left">
 
 ```sh
-python -c "print('Hello from Persian Terminal!')"
+python -c "print('سلام دنیا از ترمینال فارسی')"
 ```
 
 </div>
