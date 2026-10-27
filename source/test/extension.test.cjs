@@ -145,6 +145,12 @@ test('display preferences validate values; export writes UTF-8 only to chosen de
     await host.provider.receive({type:'display',key:'fontSize',value:999});
     await host.provider.receive({type:'display',key:'shellPath',value:'/malicious'});
     assert.equal(host.settings.fontSize,18);assert.equal(host.settings.density,'comfortable');assert.equal(host.settings.shellPath,'');
+    await host.provider.receive({type:'display',key:'preserveOutput',value:true});
+    assert.equal(host.settings.preserveOutput,true);
+    await host.provider.receive({type:'display',key:'preserveOutput',value:'false'});
+    assert.equal(host.settings.preserveOutput,true);
+    await host.provider.receive({type:'display',key:'preserveOutput',value:false});
+    assert.equal(host.settings.preserveOutput,false);
     const writes=[];host.mock.workspace.fs={writeFile:async(uri,bytes)=>writes.push([uri,Buffer.from(bytes).toString('utf8')])};
     host.mock.window.showSaveDialog=async()=>undefined;
     await host.provider.receive({type:'save',text:'سلام'});assert.equal(writes.length,0);
@@ -203,14 +209,16 @@ test('rerunning Python closes a waiting session and starts fresh in the same tab
  const fs=require('node:fs'),path=require('node:path');
  const host=createHost(), file=path.join(host.root,'rerun-test.py');
  try{
-  fs.writeFileSync(file,"print('fresh run')\n");
+  fs.writeFileSync(file,"input('waiting')\n");
+  host.settings.preserveOutput = true;
   const uri=host.mock.Uri.file(file);uri.scheme='file';
   host.mock.workspace.openTextDocument=async()=>({uri,languageId:'python',isDirty:false});
   host.mock.workspace.getWorkspaceFolder=()=>({uri:host.mock.Uri.file(host.root)});
   host.mock.extensions={getExtension:()=>({activate:async()=>({settings:{getExecutionDetails:()=>({execCommand:['python3']})}})})};
-  await host.provider.receive({type:'run',command:'printf waiting; read answer'});
+  await host.provider.runPythonFile(uri);
   const before=host.provider.active.session,key=host.provider.active.key;
   await until(()=>before.busy);
+  fs.writeFileSync(file,"print('fresh run')\n");
   await host.provider.runPythonFile(uri);
   assert.notEqual(host.provider.active.session,before);
   assert.equal(host.provider.active.key,key);
@@ -219,4 +227,52 @@ test('rerunning Python closes a waiting session and starts fresh in the same tab
   assert.ok(events.some(e=>e.type==='exit'&&e.id===1&&e.stopped));
   assert.ok(events.some(e=>e.type==='data'&&e.id===2&&e.data.includes('fresh run')));
  }finally{host.dispose();fs.rmSync(file,{force:true});}
+});
+
+test('generic Run File builds quoted commands for supported languages and exposes Go action',async()=>{
+ const path=require('node:path');
+ for(const [language,exe,args] of [['go','go',['run']],['javascript','node',[]],['php','php',[]],['ruby','ruby',[]],['java','java',[]]]){
+  const host=createHost();try{
+   const uri=host.mock.Uri.file(path.join(host.root,"file with ' spaces."+language));uri.scheme='file';
+   host.mock.workspace.openTextDocument=async()=>({uri,languageId:language,isDirty:false});
+   host.mock.workspace.getWorkspaceFolder=()=>undefined;
+   host.provider.active.checked=true;
+   let command;
+   host.provider.active.session.execute=c=>command=c;
+   await host.commands.get('persianTerminal.runFile')(uri);
+   const {invocation,shellQuote}=require('../out/session');
+   const shell=host.provider.active.shell;
+   assert.equal(command,'cd -- '+shellQuote(host.root,shell)+' && '+invocation(exe,[...args,uri.fsPath],shell));
+   assert.equal(host.provider.active.fileName,path.basename(uri.fsPath));
+  }finally{host.dispose();}
+ }
+ const menus=require('../package.json').contributes.menus;
+ assert.ok(menus['editor/title'].some(x=>x.command==='persianTerminal.runFile'&&x.when.includes('go')));
+});
+
+test('files reuse isolated tabs, rerun clears by default, preserve option retains output and manual commands use general tab', async()=>{
+ const fs=require('node:fs'),path=require('node:path');
+ const h=createHost(),dir=fs.mkdtempSync(path.join(h.root,'tabs-'));
+ try{
+  h.mock.workspace.getWorkspaceFolder=()=>undefined;
+  h.mock.workspace.openTextDocument=async uri=>({uri,languageId:'python',isDirty:false});
+  h.mock.extensions={getExtension:()=>({activate:async()=>({settings:{getExecutionDetails:()=>({execCommand:['python3']})}})})};
+  const a=h.mock.Uri.file(path.join(dir,'a.py')),b=h.mock.Uri.file(path.join(dir,'b.py'));a.scheme=b.scheme='file';
+  fs.writeFileSync(a.fsPath,"print('A')");fs.writeFileSync(b.fsPath,"print('B')");
+  await h.provider.runPythonFile(a);const ta=h.provider.active;await until(()=>!ta.session.busy);
+  assert.equal(ta.name,'a.py');
+  await h.provider.runPythonFile(b);const tb=h.provider.active;await until(()=>!tb.session.busy);
+  assert.notEqual(ta.key,tb.key);
+  await h.provider.runPythonFile(a);assert.equal(h.provider.active,ta);await until(()=>!ta.session.busy);
+  assert.equal(ta.log.readAfter(-1).entries.filter(x=>x.event.type==='start').length,1);
+  assert.ok(tb.log.readAfter(-1).entries.some(x=>x.event.type==='data'&&x.event.data.includes('B')));
+  h.settings.preserveOutput=true;
+  await h.provider.runPythonFile(a);await until(()=>!ta.session.busy);
+  assert.equal(ta.log.readAfter(-1).entries.filter(x=>x.event.type==='start').length,2);
+  await h.provider.receive({type:'run',command:'printf general'});
+  assert.equal(h.provider.active.fileKey,undefined);await until(()=>!h.provider.active.session.busy);
+  assert.equal(h.provider.tabs.size,3);
+  await h.provider.runPythonFile(b);await until(()=>!tb.session.busy);
+  assert.equal(h.provider.tabs.size,3);assert.equal(h.provider.active,tb);
+ }finally{h.dispose();fs.rmSync(dir,{recursive:true,force:true});}
 });

@@ -4,61 +4,120 @@
 
 <a id="english"></a>
 
-Read Persian naturally in VS Code, with connected letters and right-to-left text alongside English commands.
+**Your commands. Persian you can read.**
+
+Run programs, answer prompts and read Persian naturally inside VS Code. Persian Terminal brings connected Persian letters, right-to-left text and English commands together in a focused panel built for text output.
+
+![Persian Terminal with display controls](media/screenshots/display-settings.png)
 
 ## Features
 
-- **Readable Persian output:** connected letters, RTL alignment and a bundled Vazirmatn font that works offline.
-- **Real terminal sessions:** VS Code PTY/ConPTY handles interactive programs across languages.
-- **Independent tabs:** keep separate working directories and shell environments.
-- **Python file runner:** launch the open file using your selected interpreter. Running again while it is busy closes that session and starts fresh in the same tab.
-- **Clear input history:** submitted answers have a small input label; the final output section is labeled after execution finishes.
-- **Search, copy and export:** find text in the current tab and save an individual run's output.
-- **Adjustable display:** font size, compact spacing, and Persian alignment.
-- **Native terminal access:** open the underlying terminal for full-screen programs, hidden password input and special keys.
+- **Readable Persian:** connected letters, adjustable alignment and the bundled Vazirmatn font, available offline.
+- **Run files from the editor:** launch Python, Go, JavaScript, PHP, Ruby and Java files with a dedicated command.
+- **One tab per file:** keep each file’s output separate. Running the same file again reuses its tab.
+- **Restart without extra steps:** rerunning closes the previous session and starts fresh, even while the program is waiting for input.
+- **Keep output for comparison:** turn on **Preserve previous output** in **Display** to retain earlier runs in the same tab.
+- **Interactive input:** answer prompts from the panel and review submitted answers with compact input labels.
+- **Independent shell sessions:** manual commands run in a general tab, where the working directory and environment persist between commands.
+- **Search, copy and save:** find text in the current tab, copy a run’s output or export it to a file.
+- **A display that fits your workflow:** adjust text size, compact or regular spacing, and Persian alignment.
+- **Access to the native terminal:** switch to the underlying terminal when a program needs a full-screen interface or special keyboard input.
 
-![Welcome screen](https://raw.githubusercontent.com/A-F-Rashidi/persian-terminal/main/media/screenshots/welcome.png)
+## Get started
 
-## Quick start
+1. Install **Persian Terminal** in VS Code. For a downloaded VSIX, use **Extensions: Install from VSIX**, then **Developer: Reload Window**.
+2. Open the Command Palette and run **Persian Terminal: Open**.
+3. Select an installed shell with Shell Integration enabled.
+4. Run a supported file from the editor, or enter a command in the panel.
 
-1. Install the VSIX using **Extensions: Install from VSIX**, then run **Developer: Reload Window**.
-2. Open **Persian Terminal: Open** from the Command Palette.
-3. Choose an installed shell with Shell Integration: PowerShell 7 or Git Bash on Windows; Bash, Zsh or PowerShell 7 on Linux/macOS.
-4. Keep **terminal.integrated.shellIntegration.enabled** enabled.
-5. Open a Python file and choose **Run Python File in Persian Terminal**, or enter a command directly.
+Try a simple command:
 
-The extension does not install interpreters or compilers. Use your normal commands, such as **node app.js**, **go run .**, or **python app.py**.
+```sh
+python -c "print('Hello from Persian Terminal!')"
+```
 
-## Interactive input and rerunning
+Use `python3` if that is the Python command on your system. Language runtimes and compilers must be installed separately.
 
-![Interactive input](https://raw.githubusercontent.com/A-F-Rashidi/persian-terminal/main/media/screenshots/input.png)
+## Run files from the editor
 
-Enter an answer in the bottom field and press Enter. During a running program, this sends input rather than launching another command.
+### Python
 
-To restart a Python file, use **Run Python File in Persian Terminal** again. The previous session is closed, its environment changes are discarded, and a fresh session starts in the same tab. Previous output remains visible.
+Open a Python file and choose **Run Python File in Persian Terminal** from the editor’s run menu or context menu.
 
-Python runs from the workspace folder, or from its file folder when no workspace is open. Configure **persianTerminal.pythonPath** to override the interpreter; otherwise the Python extension's selected interpreter takes priority over the local .venv/system fallback.
+![Run Python File in Persian Terminal](media/screenshots/run-python.png)
 
-## Display settings
+The extension uses `persianTerminal.pythonPath` when configured; otherwise it checks the Python extension’s selected interpreter, then the project’s `.venv` or system Python where applicable. Python files run from the workspace folder, or their own folder when no workspace is open.
 
-![Display settings](https://raw.githubusercontent.com/A-F-Rashidi/persian-terminal/main/media/screenshots/settings.png)
+### JavaScript, Go and other languages
 
-Use **Display** to change font size, spacing and Persian alignment. Ctrl+F searches, Ctrl+L clears the view, Shift+Enter adds a line, and Ctrl+C interrupts a program when no text is selected.
+Choose **Run File in Persian Terminal** for Go, JavaScript, PHP, Ruby and Java files.
 
-## Troubleshooting and limits
+![Run JavaScript in Persian Terminal](media/screenshots/run-javascript.png)
 
-- If shell integration is unavailable, the native terminal opens with a setup message. Windows PowerShell and PowerShell 7 are different shells.
-- Use **Native terminal** for full-screen interfaces, passwords and arrow-key interaction.
-- Output and stderr share one stream in PTY mode. Input/output labels describe event order; they do not infer the meaning of program text.
-- Copy/export excludes decorative labels and separate submitted-input rows. History is bounded and kept in memory.
-- Ctrl+C is a request to interrupt; some programs may ignore it. Closing the tab closes its terminal.
-- Set **persianTerminal.sessionBackend** to **legacy** and open a new tab only if you need the older pipe-based behavior.
+![Run Go in Persian Terminal](media/screenshots/run-go.png)
 
-## Development
+| Language | Execution |
+| --- | --- |
+| Python | Selected Python interpreter with unbuffered output |
+| JavaScript | `node file.js` |
+| Go | `go run file.go` |
+| PHP | `php file.php` |
+| Ruby | `ruby file.rb` |
+| Java | `java File.java` with a runtime that supports source-file execution |
 
-Run **npm ci**, **npm test**, and **npm run package** in the source folder. Automated tests include shell processes and mocked VS Code terminal APIs; they do not establish compatibility with every Windows/ConPTY program.
+These actions run the selected file. For a multi-file Go package, enter `go run .` in the appropriate folder; use `go test` for test files. Other build commands and languages can be run manually when their tools are installed. The panel is designed for text output.
 
-[Shell Integration documentation](https://code.visualstudio.com/docs/terminal/shell-integration)
+## Tabs, reruns and output history
+
+Each file gets a reusable tab named after it. Running another file keeps the previous file’s output in its own tab. Up to eight tabs can be open at once; close an unused tab to make room.
+
+Rerunning a file starts a fresh session in the same tab. The old process is closed, and its environment changes are not carried over. Previous output is cleared by default.
+
+To compare runs, open **Display** and enable **Preserve previous output**. This preference is saved and applies to subsequent runs. Switching it off does not immediately erase the current view. Output history is held in memory and has size limits; save important results to a file.
+
+## Interactive input
+
+![Answering a program prompt](media/screenshots/input.png)
+
+While a program is running, the bottom field sends answers to that program. Enter your response and select **Send** or press **Enter**. To restart the file, use its editor run action again.
+
+Submitted answers appear with a small input label. After execution ends, text following the last answer receives an output label. Labels follow the order of events; they do not interpret the meaning of the program’s text. Copy and export omit the display labels and separate input rows.
+
+## Everyday controls
+
+| Control | Action |
+| --- | --- |
+| Display | Text size, spacing, Persian alignment and output preservation |
+| Folder | Change the working directory |
+| Search | Find text in the current tab |
+| Copy / Save beside a run | Copy or export that run’s output |
+| Clear | Clear the view without closing the shell session |
+| Stop | Send an interrupt to the running program |
+| Native terminal | Open the underlying VS Code terminal |
+| Double-click a tab name | Rename the tab |
+
+**Keyboard shortcuts:** Enter runs a command or sends input; Shift+Enter adds a line; ↑/↓ browse history; Ctrl+F searches; Ctrl+L clears the view. Ctrl+C interrupts when no text is selected.
+
+## Setup and troubleshooting
+
+- Keep `terminal.integrated.shellIntegration.enabled` enabled. Use PowerShell 7 or Git Bash on Windows, or Bash, Zsh or PowerShell 7 on Linux/macOS.
+- If the shell cannot connect, check the setup message in the native terminal. Windows PowerShell and PowerShell 7 are different shells.
+- If a runtime is not found, install it and make it available to the shell. For Python, check **Python: Select Interpreter** or `persianTerminal.pythonPath`.
+- Use the native terminal for full-screen tools, hidden password entry and arrow-key interfaces. Advanced cursor-based output may not render fully in the Persian panel.
+- Some programs ignore Ctrl+C. Close their tab or rerun the file to replace the session.
+- In native terminal mode, standard output and errors arrive as a combined stream.
+
+## Development and feedback
+
+```sh
+npm ci
+npm test
+npm run package
+```
+
+Found an issue? [Open a report](https://github.com/A-F-Rashidi/persian-terminal/issues) with your operating system, shell and a short example that reproduces it.
+
+Licensed under MIT.
 
 ---
 
@@ -66,105 +125,120 @@ Run **npm ci**, **npm test**, and **npm run package** in the source folder. Auto
 
 <div dir="rtl" align="right">
 
+<h1>ترمینال فارسی</h1>
 
-<h1 align="center">Persian Terminal · ترمینال فارسی</h1>
-<p align="center"><strong>فارسی را همان‌طور که باید، بخوان.</strong></p>
+<p><strong>فارسی را همان‌طور که باید، بخوان.</strong></p>
 
-اگر خروجی فارسی برنامه‌ات در ترمینال ناخوانا می‌شود، این افزونه یک پنل برای خواندن فارسی و انگلیسی کنار هم در VS Code در اختیارت می‌گذارد. دستورها در شل واقعی اجرا می‌شوند؛ متن فارسی با حروف متصل و چینش راست‌به‌چپ نمایش داده می‌شود.
+<p>دستور اجرا کنید، به پرسش‌های برنامه پاسخ دهید و خروجی فارسی را روان بخوانید. ترمینال فارسی، حروف متصل و چینش راست‌به‌چپ را در کنار دستورهای انگلیسی، در پنلی ساده داخل VS Code در اختیار شما می‌گذارد.</p>
 
-## یک نگاه به محیط
+<p><img src="media/screenshots/display-settings.png" alt="محیط ترمینال فارسی و تنظیمات نمایش"></p>
 
-![صفحه شروع ترمینال فارسی](https://raw.githubusercontent.com/A-F-Rashidi/persian-terminal/main/media/screenshots/welcome.png)
+<h2>امکانات</h2>
 
-*تصاویر راهنما از نسخه ۰.۳.۲ هستند؛ نسخه این بسته ۰.۳.۵ است.*
+<ul>
+<li><strong>فارسی خوانا:</strong> نمایش حروف متصل، چینش قابل تنظیم و فونت وزیرمتن، بدون نیاز به اینترنت برای بارگذاری فونت.</li>
+<li><strong>اجرای مستقیم فایل:</strong> اجرای فایل‌های Python، Go، JavaScript، PHP، Ruby و Java از منوی ویرایشگر.</li>
+<li><strong>یک تب برای هر فایل:</strong> خروجی فایل‌ها جدا می‌ماند و اجرای دوباره، همان تب را به کار می‌گیرد.</li>
+<li><strong>شروع دوباره با یک انتخاب:</strong> با اجرای مجدد فایل، نشست قبلی بسته می‌شود و برنامه از ابتدا اجرا می‌شود؛ حتی وقتی منتظر ورودی است.</li>
+<li><strong>حفظ خروجی برای مقایسه:</strong> نگه‌داشتن نتیجه اجراهای قبلی با یک گزینه در بخش «نمایش».</li>
+<li><strong>ورودی تعاملی:</strong> ارسال پاسخ از داخل پنل و مرور پاسخ‌ها با برچسب کوچک «ورودی».</li>
+<li><strong>نشست‌های مستقل:</strong> دستورهای دستی در تب عمومی اجرا می‌شوند و مسیر و متغیرهای محیطی میان دستورها باقی می‌مانند.</li>
+<li><strong>جست‌وجو، کپی و ذخیره:</strong> پیدا کردن متن در تب جاری و دریافت خروجی هر اجرا به صورت جداگانه.</li>
+<li><strong>نمایش مطابق سلیقه شما:</strong> تنظیم اندازه متن، فاصله‌ها و چینش فارسی.</li>
+<li><strong>دسترسی به ترمینال اصلی:</strong> ادامه کار با ابزارهایی که به محیط تمام‌صفحه یا کلیدهای ویژه نیاز دارند.</li>
+</ul>
 
-## نصب و اولین اجرا
+<h2>شروع کار</h2>
 
-۱. فایل VSIX را از بسته استخراج کن.
-۲. در VS Code کلیدهای **Ctrl+Shift+P** را بزن و **Extensions: Install from VSIX** را انتخاب کن.
-۳. فایل افزونه را انتخاب و سپس **Developer: Reload Window** را اجرا کن.
-۴. از پنجره فرمان‌ها، **Persian Terminal: Open** را باز کن.
-۵. از گزینه شل در نوار بالا، یک شل نصب‌شده و سازگار انتخاب کن.
+<ol>
+<li>افزونه Persian Terminal را در VS Code نصب کنید. برای فایل VSIX، دستور <bdi dir="ltr">Extensions: Install from VSIX</bdi> و سپس <bdi dir="ltr">Developer: Reload Window</bdi> را اجرا کنید.</li>
+<li>پنجره فرمان‌ها را باز کنید و <bdi dir="ltr">Persian Terminal: Open</bdi> را انتخاب کنید.</li>
+<li>یک شل نصب‌شده با Shell Integration فعال انتخاب کنید.</li>
+<li>فایل خود را از منوی ویرایشگر اجرا کنید یا دستور را در کادر پایین پنل بنویسید.</li>
+</ol>
 
-برای امتحان، این دستور را وارد کن:
+<p>برای شروع، این پیام کوتاه را امتحان کنید:</p>
+</div>
+
+<div dir="ltr" align="left">
+
+```sh
+python -c "print('سلام دنیا از طریق ترمینال فارسی')"
+```
 
 </div>
-<pre dir="ltr">python -c "print('سلام دنیا؛ آماده‌ای؟')"</pre>
+
 <div dir="rtl" align="right">
+<p>اگر فرمان پایتون در سیستم شما <code dir="ltr">python3</code> است، همان را جایگزین کنید. مفسر یا کامپایلر هر زبان باید جداگانه نصب شده باشد.</p>
 
-اگر فرمان پایتون روی سیستم تو <code>python3</code> است، همان را جایگزین کن. افزونه مفسر یا کامپایلر زبان‌ها را نصب نمی‌کند.
+<h2>اجرای فایل از ویرایشگر</h2>
 
-### انتخاب شل
+<h3>پایتون</h3>
+<p>فایل پایتون را باز کنید و از منوی اجرا یا کلیک راست، گزینه <bdi dir="ltr">Run Python File in Persian Terminal</bdi> را انتخاب کنید.</p>
+<p><img src="media/screenshots/run-python.png" alt="اجرای مستقیم فایل پایتون در ترمینال فارسی"></p>
+<p>اگر <code dir="ltr">persianTerminal.pythonPath</code> تنظیم شده باشد، همان مفسر استفاده می‌شود. در غیر این صورت، مفسر انتخاب‌شده در افزونه Python بررسی می‌شود و در شرایط مناسب، محیط <code dir="ltr">.venv</code> یا پایتون سیستم به کار می‌رود. فایل پایتون از پوشه پروژه اجرا می‌شود؛ اگر پروژه‌ای باز نباشد، پوشه خود فایل مبنای اجراست.</p>
 
-حالت پیش‌فرض از PTY خود VS Code و ConPTY در ویندوز استفاده می‌کند. برای اتصال خروجی به پنل فارسی، **Shell Integration** باید فعال باشد.
+<h3>جاوااسکریپت، Go و زبان‌های دیگر</h3>
+<p>برای فایل‌های Go، JavaScript، PHP، Ruby و Java از گزینه <bdi dir="ltr">Run File in Persian Terminal</bdi> استفاده کنید.</p>
+<p><img src="media/screenshots/run-javascript.png" alt="اجرای فایل جاوااسکریپت از منوی ویرایشگر"></p>
+<p><img src="media/screenshots/run-go.png" alt="اجرای فایل Go از منوی ویرایشگر"></p>
 
-- **ویندوز:** PowerShell 7 با نام <code>pwsh</code> یا Git Bash.
-- **لینوکس و مک:** Bash، Zsh یا PowerShell 7.
-- در تنظیمات VS Code، گزینه <code>terminal.integrated.shellIntegration.enabled</code> را فعال نگه دار.
+<table dir="rtl">
+<tr><th>زبان</th><th>روش اجرا</th></tr>
+<tr><td>Python</td><td>مفسر انتخاب‌شده با خروجی بدون بافر</td></tr>
+<tr><td>JavaScript</td><td><code dir="ltr">node file.js</code></td></tr>
+<tr><td>Go</td><td><code dir="ltr">go run file.go</code></td></tr>
+<tr><td>PHP</td><td><code dir="ltr">php file.php</code></td></tr>
+<tr><td>Ruby</td><td><code dir="ltr">ruby file.rb</code></td></tr>
+<tr><td>Java</td><td><code dir="ltr">java File.java</code> با محیطی که اجرای مستقیم فایل سورس را پشتیبانی کند</td></tr>
+</table>
 
-PowerShell قدیمی ویندوز با PowerShell 7 یکسان نیست. اگر اتصال شل آماده نشود، پیام راهنما نمایش داده می‌شود و ترمینال اصلی باز می‌شود؛ دستور بی‌صدا در حالت دیگری اجرا نمی‌شود.
+<p>این گزینه‌ها فایل انتخاب‌شده را اجرا می‌کنند. برای پروژه چندفایلی Go، دستور <code dir="ltr">go run .</code> و برای تست‌ها <code dir="ltr">go test</code> را در پوشه مناسب وارد کنید. دستورهای ساخت و زبان‌های دیگر نیز با نصب ابزار مربوط، به صورت دستی قابل اجرا هستند. پنل فارسی برای خروجی متنی طراحی شده است.</p>
 
-## اجرای فایل پایتون
+<h2>تب‌ها، اجرای دوباره و حفظ خروجی</h2>
 
-فایل را باز کن و از منوی اجرای ادیتور یا کلیک راست، **Run Python File in Persian Terminal** را انتخاب کن.
+<p>هر فایل یک تب با نام خودش دارد. با اجرای فایل دیگر، خروجی فایل قبلی در تب خودش باقی می‌ماند. حداکثر هشت تب می‌تواند هم‌زمان باز باشد؛ برای ایجاد تب بعدی، یکی از تب‌های بدون استفاده را ببندید.</p>
+<p>اجرای دوباره فایل، نشست تازه‌ای در همان تب ایجاد می‌کند. برنامه قبلی بسته می‌شود و تغییرات محیطی آن به نشست جدید منتقل نمی‌شود. خروجی قبلی به صورت پیش‌فرض پاک می‌شود.</p>
+<p>برای مقایسه نتیجه‌ها، از بخش <strong>نمایش</strong> گزینه <strong>حفظ خروجی اجراهای قبلی</strong> را روشن کنید. انتخاب شما ذخیره می‌شود و از اجرای بعدی اعمال می‌شود؛ خاموش‌کردن گزینه، خروجی موجود را فوراً پاک نمی‌کند. تاریخچه در حافظه و با ظرفیت محدود نگهداری می‌شود؛ نتیجه‌های مهم را در فایل ذخیره کنید.</p>
 
-اولویت مفسر: مسیر پایتون در تنظیمات افزونه، مفسر انتخاب‌شده در افزونه رسمی Python، و در نبود افزونه Python، محیط <code>.venv</code> پروژه یا فرمان پایتون سیستم. اگر افزونه Python نصب باشد ولی مفسر انتخاب نشده باشد، باید آن را انتخاب کنی.
+<h2>پاسخ‌دادن به برنامه</h2>
 
-اجرا از پوشه پروژه انجام می‌شود. اگر پروژه‌ای باز نباشد، پوشه خود فایل مبنای اجراست. مسیر پوشه و نام فایل در بالای پنل دیده می‌شوند.
+<p><img src="media/screenshots/input.png" alt="ارسال پاسخ به برنامه در ترمینال فارسی"></p>
+<p>هنگام اجرای برنامه، کادر پایین برای ارسال پاسخ است. پاسخ را بنویسید و <strong>ارسال</strong> یا <bdi dir="ltr">Enter</bdi> را بزنید. برای شروع دوباره فایل، گزینه اجرای آن را از منوی ویرایشگر انتخاب کنید.</p>
+<p>پاسخ‌ها با برچسب کوچک «ورودی» نمایش داده می‌شوند. پس از پایان اجرا، متن بعد از آخرین پاسخ با برچسب «خروجی» مشخص می‌شود. این برچسب‌ها بر اساس ترتیب رویدادها هستند و معنای متن برنامه را تشخیص نمی‌دهند. کپی و ذخیره شامل برچسب‌های نمایشی و ردیف‌های جداگانه ورودی نیست.</p>
 
-### اجرای دوباره هنگام دریافت ورودی
+<h2>ابزارهای روزمره</h2>
 
-اگر برنامه هنوز اجرا می‌شود یا منتظر پاسخ است، دوباره **Run Python File in Persian Terminal** را بزن. اجرای قبلی متوقف و نشست آن بسته می‌شود؛ فایل در یک نشست تازه، در همان تب، از ابتدا اجرا می‌شود.
+<ul>
+<li><strong>نمایش:</strong> اندازه متن، فاصله‌ها، چینش فارسی و حفظ خروجی.</li>
+<li><strong>پوشه:</strong> تغییر مسیر اجرای دستورها.</li>
+<li><strong>جست‌وجو:</strong> پیدا کردن متن در تب جاری.</li>
+<li><strong>کپی و ذخیره کنار اجرا:</strong> دریافت خروجی همان اجرا.</li>
+<li><strong>پاک‌کردن:</strong> پاک‌کردن نمایش بدون بستن نشست شل.</li>
+<li><strong>توقف:</strong> ارسال درخواست توقف به برنامه.</li>
+<li><strong>ترمینال اصلی:</strong> بازکردن ترمینال زیرین در VS Code.</li>
+<li><strong>دوبار کلیک روی نام تب:</strong> تغییر نام تب.</li>
+</ul>
 
-خروجی قبلی برای مقایسه باقی می‌ماند. متغیرها و تغییرات محیطی نشست قبلی به نشست تازه منتقل نمی‌شوند. لغو ذخیره فایل، برنامه در حال اجرا را متوقف نمی‌کند. کادر «ارسال» پایین پنل همچنان برای پاسخ‌دادن به برنامه است، نه اجرای مجدد فایل.
+<p><strong>میانبرها:</strong> <bdi dir="ltr">Enter</bdi> برای اجرا یا ارسال، <bdi dir="ltr">Shift+Enter</bdi> برای خط بعد، کلیدهای بالا و پایین برای تاریخچه، <bdi dir="ltr">Ctrl+F</bdi> برای جست‌وجو و <bdi dir="ltr">Ctrl+L</bdi> برای پاک‌کردن نمایش. وقتی متنی انتخاب نشده باشد، <bdi dir="ltr">Ctrl+C</bdi> درخواست توقف می‌فرستد.</p>
 
-## پاسخ‌دادن به برنامه
+<h2>راه‌اندازی و رفع مشکل</h2>
 
-![دریافت ورودی از کاربر](https://raw.githubusercontent.com/A-F-Rashidi/persian-terminal/main/media/screenshots/input.png)
+<ul>
+<li>گزینه <code dir="ltr">terminal.integrated.shellIntegration.enabled</code> را فعال نگه دارید. در ویندوز از PowerShell 7 یا Git Bash و در لینوکس و مک از Bash، Zsh یا PowerShell 7 استفاده کنید.</li>
+<li>اگر اتصال شل برقرار نشد، پیام راهنما در ترمینال اصلی را بررسی کنید. Windows PowerShell با PowerShell 7 متفاوت است.</li>
+<li>اگر ابزار زبان پیدا نشد، نصب و دسترسی آن از شل را بررسی کنید. برای پایتون، <bdi dir="ltr">Python: Select Interpreter</bdi> یا تنظیم <code dir="ltr">persianTerminal.pythonPath</code> را بررسی کنید.</li>
+<li>برای برنامه‌های تمام‌صفحه، ورود رمز مخفی و رابط‌های وابسته به کلیدهای جهت، از ترمینال اصلی استفاده کنید. خروجی‌هایی که مکان نشانگر را به شکل پیشرفته تغییر می‌دهند، ممکن است در پنل فارسی کامل نمایش داده نشوند.</li>
+<li>بعضی برنامه‌ها درخواست توقف را نادیده می‌گیرند. بستن تب یا اجرای دوباره فایل، نشست آن‌ها را می‌بندد.</li>
+<li>در حالت ترمینال اصلی، خروجی عادی و خطا در یک جریان دریافت می‌شوند.</li>
+</ul>
 
-پاسخ را در کادر پایین بنویس و **ارسال** یا **Enter** را بزن. پاسخ ارسالی با برچسب کوچک «ورودی» ثبت می‌شود.
+<h2>توسعه و بازخورد</h2>
 
-سوال‌ها برچسب خروجی ندارند. پس از پایان اجرا، بخش بعد از آخرین پاسخ با برچسب «خروجی» مشخص می‌شود. این دسته‌بندی بر اساس ترتیب رویدادهاست؛ افزونه معنای سوال و جواب را تشخیص نمی‌دهد.
-
-برای زبان‌های دیگر، فرمان معمول آن‌ها را وارد کن؛ مثل <code>node app.js</code> یا <code>go run .</code>. دریافت ورودی در حالت ترمینال واقعی به پایتون محدود نیست.
-
-## ظاهر دلخواه
-
-![تنظیم اندازه متن و چینش فارسی](https://raw.githubusercontent.com/A-F-Rashidi/persian-terminal/main/media/screenshots/settings.png)
-
-از **نمایش**، اندازه متن، فاصله‌ها و چینش فارسی را تغییر بده. فونت وزیرمتن همراه افزونه است و برای نمایش آن به اینترنت نیاز نداری.
-
-## ابزارهای روزمره
-
-| ابزار | کاربرد |
-| --- | --- |
-| ＋ | تب تازه با نشست مستقل |
-| دوبار کلیک روی نام تب | تغییر نام تب |
-| پوشه | تغییر پوشه اجرای دستورها |
-| جست‌وجو | پیدا کردن متن در خروجی تب |
-| کپی / ذخیره کنار اجرا | برداشتن خروجی همان اجرا |
-| پاک‌کردن | پاک‌کردن نمایش؛ بدون بستن نشست |
-| توقف | ارسال Ctrl+C در حالت ترمینال واقعی |
-| ترمینال اصلی | بازکردن نمای بومی همان ترمینال |
-
-کپی و ذخیره خروجی شامل برچسب‌های نمایشی و ردیف جداگانه ورودی کاربر نیست. تاریخچه داخل حافظه و محدود است؛ برای نگه‌داشتن نتیجه مهم، آن را ذخیره کن.
-
-**میانبرها:** Enter برای اجرا یا ارسال، Shift+Enter برای خط بعد، ↑ و ↓ برای تاریخچه، Ctrl+F برای جست‌وجو و Ctrl+L برای پاک‌کردن خروجی. Ctrl+C وقتی متنی انتخاب نشده باشد، توقف می‌فرستد.
-
-## اگر چیزی درست کار نکرد
-
-- **شل پیدا نمی‌شود:** از فهرست شل‌ها انتخاب کن یا مسیر صحیح را در <code>persianTerminal.shellPath</code> وارد کن.
-- **مفسر پایتون اشتباه است:** **Python: Select Interpreter** را اجرا کن؛ یا <code>persianTerminal.pythonPath</code> را تغییر بده.
-- **برنامه تمام‌صفحه، رمز مخفی یا کلیدهای جهت دارد:** از **ترمینال اصلی** استفاده کن. پنل فارسی برای خروجی متنی طراحی شده است.
-- **برنامه با توقف بسته نمی‌شود:** ممکن است Ctrl+C را نادیده بگیرد. بستن تب یا اجرای دوباره فایل پایتون، نشست را می‌بندد.
-- **به رفتار نسخه قدیمی نیاز داری:** <code>persianTerminal.sessionBackend</code> را به <code>legacy</code> تغییر بده و یک تب تازه باز کن. این حالت محدودیت‌های ورودی شل نسخه‌های قبلی را دارد.
-
-## توسعه و محدودیت بررسی
-
-سورس TypeScript همراه بسته است. در پوشه سورس، به ترتیب <code>npm ci</code>، <code>npm test</code> و <code>npm run package</code> را اجرا کن. فایل نصب با ابزار رسمی vsce ساخته می‌شود. تصاویر راهنما از مخزن عمومی گیت‌هاب بارگذاری می‌شوند.
-
-آزمون‌ها شامل منطق نشست، ورودی فارسی، نمایش متن و شبیه‌سازی رابط ترمینال VS Code هستند. شبیه‌سازی جای آزمایش واقعی روی ویندوز را نمی‌گیرد؛ رفتار کامل ConPTY و همه برنامه‌های تعاملی در این محیط تایید نشده است.
-
-[راهنمای Shell Integration](https://code.visualstudio.com/docs/terminal/shell-integration)
+<pre dir="ltr" align="left"><code>npm ci
+npm test
+npm run package</code></pre>
+<p>برای <a href="https://github.com/A-F-Rashidi/persian-terminal/issues">گزارش مشکل</a>، نام سیستم‌عامل، شل و نمونه کوتاهی از کدی که مشکل را نشان می‌دهد ارسال کنید.</p>
+<p>این پروژه با مجوز MIT ارائه می‌شود.</p>
 
 </div>

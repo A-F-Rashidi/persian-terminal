@@ -2,7 +2,7 @@
   "name": "persian-terminal",
   "displayName": "Persian Terminal",
   "description": "Read Persian naturally in VS Code: RTL output, interactive terminal sessions, Python execution, search and export.",
-  "version": "0.3.5",
+  "version": "0.3.9",
   "publisher": "persian-terminal-lab",
   "license": "MIT",
   "engines": {
@@ -43,6 +43,12 @@
         "command": "persianTerminal.runPythonFile",
         "title": "Run Python File in Persian Terminal",
         "icon": "$(terminal)",
+        "enablement": "isWorkspaceTrusted"
+      },
+      {
+        "command": "persianTerminal.runFile",
+        "title": "Run File in Persian Terminal",
+        "icon": "$(play)",
         "enablement": "isWorkspaceTrusted"
       }
     ],
@@ -144,6 +150,11 @@
           ],
           "default": "native",
           "description": "Native uses VS Code PTY/ConPTY and requires shell integration (PowerShell 7, Bash or Zsh). Legacy retains the previous pipe-based runner. Changes apply to newly opened tabs."
+        },
+        "persianTerminal.preserveOutput": {
+          "type": "boolean",
+          "default": false,
+          "description": "Keep previous output when rerunning a file. حفظ خروجی اجراهای قبلی. Each file reuses its own tab; rerunning starts a fresh session."
         }
       }
     },
@@ -153,6 +164,11 @@
           "command": "persianTerminal.runPythonFile",
           "when": "resourceLangId == python",
           "group": "navigation@5"
+        },
+        {
+          "command": "persianTerminal.runFile",
+          "when": "resourceLangId =~ /^(go|javascript|php|ruby|java)$/",
+          "group": "navigation@6"
         }
       ],
       "editor/context": [
@@ -160,6 +176,11 @@
           "command": "persianTerminal.runPythonFile",
           "when": "editorLangId == python",
           "group": "1_modification@5"
+        },
+        {
+          "command": "persianTerminal.runFile",
+          "when": "resourceLangId =~ /^(go|javascript|php|ruby|java)$/",
+          "group": "1_modification@6"
         }
       ],
       "explorer/context": [
@@ -167,6 +188,18 @@
           "command": "persianTerminal.runPythonFile",
           "when": "resourceExtname == .py",
           "group": "navigation@5"
+        },
+        {
+          "command": "persianTerminal.runFile",
+          "when": "resourceLangId =~ /^(go|javascript|php|ruby|java)$/",
+          "group": "1_modification@6"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "persianTerminal.runFile",
+          "when": "resourceLangId =~ /^(go|javascript|php|ruby|java)$/",
+          "group": "navigation@6"
         }
       ]
     }

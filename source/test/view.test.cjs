@@ -221,3 +221,13 @@ test('prompts have no output caption; only text after the last answer is labeled
   assert.equal(f.doc.querySelector('.run-lines[data-label]').textContent,'از تبریز رنگ سبز رو دوست داره');
  }finally{f.close();}
 });
+
+test('display output preservation switch sends booleans and follows saved state',()=>{
+ const f=fixture();try{
+  const toggle=f.doc.getElementById('preserve-output');
+  f.post({type:'state',preserveOutput:true});assert.equal(toggle.checked,true);
+  toggle.click();assert.ok(f.sent.some(m=>m.type==='display'&&m.key==='preserveOutput'&&m.value===false));
+  f.post({type:'state',preserveOutput:false});assert.equal(toggle.checked,false);
+  toggle.click();assert.ok(f.sent.some(m=>m.type==='display'&&m.key==='preserveOutput'&&m.value===true));
+ }finally{f.close();}
+});

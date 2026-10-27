@@ -16,6 +16,13 @@ function activate(context) {
     context.subscriptions.push(provider, vscode.window.registerWebviewViewProvider('persianTerminal.output', provider), vscode.commands.registerCommand('persianTerminal.open', async () => {
         await vscode.commands.executeCommand('workbench.view.extension.persianTerminal');
         await vscode.commands.executeCommand('persianTerminal.output.focus');
+    }), vscode.commands.registerCommand('persianTerminal.runFile', async (uri) => {
+        try {
+            await provider.runPythonFile(uri, true);
+        }
+        catch (error) {
+            await vscode.window.showErrorMessage(String(error));
+        }
     }), vscode.commands.registerCommand('persianTerminal.runPythonFile', async (uri) => {
         try {
             await provider.runPythonFile(uri);
@@ -140,25 +147,24 @@ class PersianTerminalProvider {
         } }), view.onDidDispose(() => { if (this.view === view)
             this.view = undefined; }));
     }
-    async runPythonFile(uri) {
+    async runPythonFile(uri, allowOther = false) {
         if (!vscode.workspace.isTrusted) {
             throw new Error('برای اجرای دستور، ابتدا اعتماد به پوشه پروژه را در VS Code تایید کن.');
         }
-        const tab = this.active;
-        const request = tab.runRequest = (tab.runRequest || 0) + 1;
         const target = uri ?? vscode.window.activeTextEditor?.document.uri;
         if (!target) {
-            throw new Error('فایل پایتونت را باز کن و اجرا را بزن.');
+            throw new Error('فایل را باز کن و اجرا را بزن.');
         }
         let document = await vscode.workspace.openTextDocument(target);
-        if (document.languageId !== 'python') {
-            throw new Error('فایل انتخاب‌شده پایتون نیست.');
-        }
+        const supported = ['python', 'go', 'javascript', 'php', 'ruby', 'java'];
+        if (!supported.includes(document.languageId) || (!allowOther && document.languageId !== 'python'))
+            throw new Error('اجرای مستقیم این نوع فایل پشتیبانی نمی‌شود.');
+        const language = document.languageId;
         if (document.isUntitled) {
             await vscode.window.showTextDocument(document);
             await vscode.commands.executeCommand('workbench.action.files.save');
             const saved = vscode.window.activeTextEditor?.document;
-            if (!saved || saved.isUntitled || saved.languageId !== 'python') {
+            if (!saved || saved.isUntitled || saved.languageId !== language) {
                 return;
             }
             document = saved;
@@ -170,10 +176,27 @@ class PersianTerminalProvider {
             throw new Error('اول فایل را ذخیره کن، بعد اجرا را بزن.');
         }
         const resource = document.uri;
+        const fileKey = process.platform === 'win32' ? resource.toString().toLowerCase() : resource.toString();
+        let tab = [...this.tabs.values()].find(t => t.fileKey === fileKey);
+        if (!tab) {
+            const empty = [...this.tabs.values()].find(t => !t.fileKey && !t.id && !t.preparing && !t.session.busy);
+            tab = empty || this.createTab();
+            tab.fileKey = fileKey;
+            tab.filePath = resource.fsPath;
+            tab.name = (0, node_path_1.basename)(resource.fsPath);
+        }
+        const request = tab.runRequest = (tab.runRequest || 0) + 1;
+        this.activeKey = tab.key;
+        this.lastSent = -1;
+        this.sendState();
+        this.flush();
         const folder = vscode.workspace.getWorkspaceFolder(resource)?.uri.fsPath;
-        const cwd = folder || (0, node_path_1.dirname)(resource.fsPath);
+        const cwd = language === 'python' ? folder || (0, node_path_1.dirname)(resource.fsPath) : (0, node_path_1.dirname)(resource.fsPath);
+        if (language === 'go' && /_test\.go$/i.test(resource.fsPath))
+            throw new Error('فایل تست Go را با go test اجرا کن. این گزینه برای فایل برنامه است.');
+        const commands = { go: ['go', 'run'], javascript: ['node'], php: ['php'], ruby: ['ruby'], java: ['java'] };
         const custom = vscode.workspace.getConfiguration('persianTerminal', resource).get('pythonPath', '').trim();
-        let execution = custom ? [custom] : undefined;
+        let execution = language !== 'python' ? commands[language] : custom ? [custom] : undefined;
         if (!execution) {
             const extension = vscode.extensions.getExtension('ms-python.python');
             if (extension) {
@@ -189,16 +212,21 @@ class PersianTerminalProvider {
             execution = await (0, promises_1.stat)(candidate).then(s => s.isFile() ? [candidate] : undefined).catch(() => undefined);
             execution ??= [process.platform === 'win32' ? 'python' : 'python3'];
         }
-        const args = [...execution.slice(1), '-u', resource.fsPath];
+        const args = [...execution.slice(1), ...(language === 'python' ? ['-u'] : []), resource.fsPath];
         if (this.disposed || !this.tabs.has(tab.key) || tab.runRequest !== request)
             return;
-        if (tab.preparing || tab.session.busy) {
+        if (tab.id || tab.preparing || tab.session.busy) {
             tab.generation++;
             if (tab.session.busy && tab.id)
                 tab.log.append({ type: 'exit', id: tab.id, code: null, signal: null, stopped: true, duration: Date.now() - tab.started });
             tab.session.dispose();
             tab.preparing = false;
             this.attach(tab);
+        }
+        if (!vscode.workspace.getConfiguration('persianTerminal').get('preserveOutput', false)) {
+            tab.log.clear();
+            this.lastSent = -1;
+            this.flush();
         }
         await vscode.commands.executeCommand('persianTerminal.open');
         if (this.disposed || !this.tabs.has(tab.key) || tab.runRequest !== request)
@@ -216,8 +244,8 @@ class PersianTerminalProvider {
         if (!tab)
             return;
         this.post({ type: 'state', tabId: tab.key, fileName: tab.fileName || '', cwd: tab.cwd, shell: tab.shell.kind, busy: tab.preparing || tab.session.busy, runId: tab.id,
-            tabs: [...this.tabs.values()].map(t => ({ id: t.key, name: t.name, shell: t.shell.kind, busy: t.preparing || t.session.busy })),
-            density: config.get('density', 'compact'), persianAlignment: config.get('persianAlignment', 'right'),
+            tabs: [...this.tabs.values()].map(t => ({ id: t.key, name: t.name, filePath: t.filePath, shell: t.shell.kind, busy: t.preparing || t.session.busy })),
+            preserveOutput: config.get('preserveOutput', false), density: config.get('density', 'compact'), persianAlignment: config.get('persianAlignment', 'right'),
             persianFontFamily: config.get('persianFontFamily'), fontFamily: config.get('fontFamily'), fontSize: config.get('fontSize', 14), maxLines: config.get('maxLines', 2000) });
     }
     async receive(message) {
@@ -230,7 +258,7 @@ class PersianTerminalProvider {
             this.flush();
             return;
         }
-        const tab = typeof m.tabId === 'number' ? this.tabs.get(m.tabId) : this.active;
+        let tab = typeof m.tabId === 'number' ? this.tabs.get(m.tabId) : this.active;
         if (!tab)
             return;
         if (m.type === 'switchTab' && typeof m.target === 'number' && this.tabs.has(m.target)) {
@@ -265,7 +293,7 @@ class PersianTerminalProvider {
             return;
         }
         if (m.type === 'display') {
-            const allowed = { density: ['compact', 'comfortable'], persianAlignment: ['right', 'left', 'auto'] };
+            const allowed = { preserveOutput: [true, false], density: ['compact', 'comfortable'], persianAlignment: ['right', 'left', 'auto'] };
             const key = m.key, value = m.value;
             if (typeof key !== 'string' || !(key === 'fontSize' && Number.isInteger(value) && Number(value) >= 10 && Number(value) <= 32 || (Array.isArray(allowed[key]) && allowed[key].includes(value))))
                 return;
@@ -363,6 +391,14 @@ class PersianTerminalProvider {
             }
             return;
         }
+        if (tab.fileKey) {
+            tab = [...this.tabs.values()].find(t => !t.fileKey && !t.preparing && !t.session.busy) || this.createTab();
+            tab.name = 'ترمینال';
+            this.activeKey = tab.key;
+            this.lastSent = -1;
+            this.sendState();
+            this.flush();
+        }
         await this.executeRun(m.command, tab);
     }
     async executeRun(command, tab, title, workingDirectory, program) {
@@ -435,10 +471,10 @@ class PersianTerminalProvider {
 <html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; img-src ${webview.cspSource}; font-src ${webview.cspSource}; connect-src 'none'; base-uri 'none'; form-action 'none'">
 <link rel="stylesheet" href="${resource('view.css')}"><title>Persian Terminal</title></head>
-<body><header class="toolbar"><div class="identity"><span class="mark" aria-hidden="true">›_</span><strong>Persian Terminal</strong><span class="badge">0.3.5</span></div>
+<body><header class="toolbar"><div class="identity"><span class="mark" aria-hidden="true">›_</span><strong>Persian Terminal</strong><span class="badge">0.3.7</span></div>
 <nav aria-label="ابزارها"><button id="shell" title="انتخاب شل" dir="ltr">shell</button><button id="folder" title="انتخاب پوشه اجرا">پوشه</button><button id="search-toggle" title="جست‌وجو — Ctrl+F">جست‌وجو</button><button id="settings-toggle" title="تنظیمات نمایش" aria-expanded="false">نمایش</button><button id="copy" title="کپی همه خروجی‌ها">کپی</button><button id="clear" title="پاک‌کردن خروجی — Ctrl+L">پاک‌کردن</button><button id="native-terminal" title="نمایش ترمینال اصلی برای برنامه‌های تمام‌صفحه">ترمینال اصلی</button><button id="stop" title="ارسال توقف به برنامه — Ctrl+C" disabled>توقف</button></nav></header>
 <div class="tabs-bar"><div id="tabs" role="tablist" aria-label="نشست‌ها"></div><button id="new-tab" title="تب تازه" aria-label="تب تازه">＋</button></div>
-<div id="display-settings" class="display-settings" hidden><label>اندازه متن <input id="font-size" type="number" min="10" max="32" value="14"></label><label>فاصله‌ها <select id="density"><option value="compact">فشرده</option><option value="comfortable">معمولی</option></select></label><label>چینش فارسی <select id="alignment"><option value="right">راست‌چین</option><option value="left">چپ‌چین</option><option value="auto">خودکار</option></select></label></div>
+<div id="display-settings" class="display-settings" hidden><label>اندازه متن <input id="font-size" type="number" min="10" max="32" value="14"></label><label>فاصله‌ها <select id="density"><option value="compact">فشرده</option><option value="comfortable">معمولی</option></select></label><label>چینش فارسی <select id="alignment"><option value="right">راست‌چین</option><option value="left">چپ‌چین</option><option value="auto">خودکار</option></select></label><label class="preserve-output"><input id="preserve-output" type="checkbox" role="switch">حفظ خروجی اجراهای قبلی</label></div>
 <div id="search-bar" class="search-bar" hidden><input id="search-query" type="search" placeholder="جست‌وجو در خروجی این تب…" aria-label="جست‌وجو در خروجی" dir="auto"><span id="search-status" role="status"></span><button id="search-prev" aria-label="نتیجه قبلی">↑</button><button id="search-next" aria-label="نتیجه بعدی">↓</button><button id="search-close" aria-label="بستن جست‌وجو">×</button></div>
 <div class="context"><div class="cwd-card"><svg class="cwd-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/><path d="M3 9h18"/></svg><div class="cwd-details"><span class="cwd-label">پوشه اجرا</span><bdi id="cwd" dir="ltr" aria-label="پوشه اجرای دستورها"></bdi></div><div class="file-details" hidden><span class="file-label">فایل</span><span id="active-file" dir="auto" hidden></span></div></div><span class="dot" id="dot" hidden></span><span id="status" role="status" hidden></span></div>
 <main id="output" tabindex="0" aria-label="خروجی دستورها"><div id="welcome" class="welcome"><div class="welcome-title">فارسی را همان‌طور که باید، بخوان.</div><p>دستور اجرا کن؛ فارسی را روان و با حروف متصل بخوان. (ویژه خروجی متنی.)</p></div></main>

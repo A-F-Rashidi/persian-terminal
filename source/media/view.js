@@ -241,6 +241,7 @@
       const nextAlignment = message.persianAlignment || 'right';
       if (alignment !== nextAlignment) { alignment = nextAlignment; for (const run of runs.values()) { run.model.dirtyFrom = 0; for (const part of run.parts) part.model.dirtyFrom = 0; } scheduleRender(); }
       document.documentElement.dataset.alignment = alignment;
+      $('preserve-output').checked = message.preserveOutput === true;
       if (document.activeElement !== $('density')) $('density').value = message.density || 'compact';
       if (document.activeElement !== $('alignment')) $('alignment').value = alignment;
       if (Number.isFinite(message.fontSize) && document.activeElement !== $('font-size')) $('font-size').value = message.fontSize;
@@ -280,7 +281,7 @@
       const group = el('div', 'tab-item'); group.classList.toggle('active', tab.id === activeTab);
       const button = el('button', 'tab-select', `${tab.busy ? '● ' : ''}${tab.name}`);
       button.setAttribute('role', 'tab'); button.setAttribute('aria-selected', String(tab.id === activeTab));
-      button.title = `${tab.shell} — دوبار کلیک برای تغییر نام`;
+      button.title = `${tab.filePath || tab.shell} — دوبار کلیک برای تغییر نام`;
       button.addEventListener('click', () => send('switchTab', { target: tab.id }));
       button.addEventListener('dblclick', () => send('renameTab', { tabId: tab.id }));
       const close = el('button', 'tab-close', '×'); close.title = 'بستن تب و توقف برنامه‌های آن'; close.setAttribute('aria-label', `بستن ${tab.name}`);
@@ -335,6 +336,7 @@
     if (event.key === 'Enter') { event.preventDefault(); $(event.shiftKey ? 'search-prev' : 'search-next').click(); }
   });
   $('settings-toggle').addEventListener('click', () => { const open = $('display-settings').hidden; $('display-settings').hidden = !open; $('settings-toggle').setAttribute('aria-expanded', String(open)); });
+  $('preserve-output').addEventListener('change', () => send('display', { key: 'preserveOutput', value: $('preserve-output').checked }));
   for (const [id, key] of [['font-size', 'fontSize'], ['density', 'density'], ['alignment', 'persianAlignment']]) $(id).addEventListener('change', () => {
     const value = key === 'fontSize' ? Number($(id).value) : $(id).value; send('display', { key, value });
   });
