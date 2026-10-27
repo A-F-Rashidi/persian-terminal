@@ -30,10 +30,10 @@ Run programs, answer prompts and read Persian naturally inside VS Code. Persian 
 3. Select an installed shell with Shell Integration enabled.
 4. Run a supported file from the editor, or enter a command in the panel.
 
-Try a short Persian message:
+Try a simple command:
 
 ```sh
-python -c "print('سلام دنیا؛ آماده‌ای؟')"
+python -c "print('Hello from Persian Terminal!')"
 ```
 
 Use `python3` if that is the Python command on your system. Language runtimes and compilers must be installed separately.
@@ -158,7 +158,17 @@ Licensed under MIT.
 </ol>
 
 <p>برای شروع، این پیام کوتاه را امتحان کنید:</p>
-<pre dir="ltr" align="left"><code>python -c "print('سلام دنیا؛ آماده‌ای؟')"</code></pre>
+</div>
+
+<div dir="ltr" align="left">
+
+```sh
+python -c "print('Hello from Persian Terminal!')"
+```
+
+</div>
+
+<div dir="rtl" align="right">
 <p>اگر فرمان پایتون در سیستم شما <code dir="ltr">python3</code> است، همان را جایگزین کنید. مفسر یا کامپایلر هر زبان باید جداگانه نصب شده باشد.</p>
 
 <h2>اجرای فایل از ویرایشگر</h2>

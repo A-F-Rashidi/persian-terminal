@@ -35,7 +35,17 @@
 </ol>
 
 <p>برای شروع، این پیام کوتاه را امتحان کنید:</p>
-<pre dir="ltr" align="left"><code>python -c "print('سلام دنیا؛ آماده‌ای؟')"</code></pre>
+</div>
+
+<div dir="ltr" align="left">
+
+```sh
+python -c "print('Hello from Persian Terminal!')"
+```
+
+</div>
+
+<div dir="rtl" align="right">
 <p>اگر فرمان پایتون در سیستم شما <code dir="ltr">python3</code> است، همان را جایگزین کنید. مفسر یا کامپایلر هر زبان باید جداگانه نصب شده باشد.</p>
 
 <h2>اجرای فایل از ویرایشگر</h2>
